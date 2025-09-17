@@ -1,4 +1,5 @@
 import {
+	BadRequestException,
 	Injectable,
 	NotFoundException,
 	UnauthorizedException
@@ -20,7 +21,19 @@ export class AuthService {
 		const { password, ...user } = await this.validateUser(dto)
 		const tokens = this.issueTokens(user.id)
 
-		return { user, tokens }
+		return { user, ...tokens }
+	}
+
+	async register(dto: AuthDto) {
+		const oldUser = await this.userService.getByEmail(dto.email)
+
+		if (oldUser) throw new BadRequestException('User already exists')
+
+		// eslint-disable-next-line @typescript-eslint/no-unused-vars
+		const { password, ...user } = await this.userService.create(dto)
+		const tokens = this.issueTokens(user.id)
+
+		return { user, ...tokens }
 	}
 
 	private issueTokens(userId: string) {
